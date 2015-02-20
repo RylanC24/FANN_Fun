@@ -27,10 +27,13 @@ int main()
     struct fann *net = fann_create_standard(nLayers,nInParams,nH1Params,nH2Params,nH3Params,nH4Params,nOutParams);
 
     /*load training data*/
-    printf("Loading Training Data.\n");
-    struct fann_train_data *data = fann_read_train_from_file("./trainingData/ivL100/fann_trainingSet_RadixHLIv4_ivL100_500k_120kSame_WLmc50k_RandInterp.txt");
-    printf("Loading Testing Data.\n");
-    struct fann_train_data *testData = fann_read_train_from_file("./trainingData/ivL100/fann_trainingSet_RadixHLIv4_ivL100_500k_120kSame_WLmc50k_RandInterp_2.txt");
+    char* trainDataFile = "./trainingData/ivL25/fann_trainingSet_RadixHLIv4_ivL25_5interps_500k_150kSame_WLmc20k_RandInterps_1.txt";
+    printf("Loading Training Data.\nTraining Datafile: %s", trainDataFile);
+    struct fann_train_data *data = fann_read_train_from_file(trainDataFile);
+    
+    char* testDataFile = "./trainingData/ivL25/fann_trainingSet_RadixHLIv4_ivL25_5interps_500k_150kSame_WLmc20k_RandInterps_2.txt";
+    printf("Loading Testing Data.\nTest Datafile: %s", testDataFile);
+    struct fann_train_data *testData = fann_read_train_from_file(testDataFile);
 
     fann_set_activation_function_layer(net, FANN_ELLIOT,1);
 //    fann_set_activation_steepness_hidden(net,0.5);
@@ -39,9 +42,9 @@ int main()
     fann_set_activation_steepness_layer(net, 0.5, 2);
     fann_set_activation_function_layer(net, FANN_ELLIOT,3);
     fann_set_activation_steepness_layer(net, 0.5, 3);
-    fann_set_activation_function_layer(net, FANN_ELLIOT, 4);
+    fann_set_activation_function_layer(net, FANN_ELLIOT,4);
     fann_set_activation_steepness_layer(net, 0.5, 4);
-    fann_set_activation_function_output(net, FANN_SIGMOID_SYMMETRIC);
+    fann_set_activation_function_output(net, FANN_ELLIOT);
     fann_set_activation_steepness_output(net,0.5);
     
     /*set training algorithm to rprop*/
@@ -74,25 +77,23 @@ int main()
     unsigned int correct = 0;
     unsigned int accurate = 0;
 
-    for(i = 0; i < fann_length_train_data(testData); i++)
-    {
+    for(i = 0; i < fann_length_train_data(testData); i++) {
         calc_out = fann_run(net, testData->input[i]);
 //        printf("Net input: %f %f %f %f %f %f %f %f %f %f %f\n", data->input[i][0],data->input[i][1],data->input[i][2],data->input[i][3],data->input[i][4],data->input[i][5],data->input[i][6],data->input[i][7],data->input[i][8],data->input[i][9],data->input[i][10]);
 
-        if(testData->output[i][0] == 1)
-        {
-            if(calc_out[0] > 0.5)
-            {
+        if(i%25000==0)
+            printf("%.1f %f\n",testData->output[i][0],calc_out[0]);
+
+        if(testData->output[i][0] == 1) {
+            if(calc_out[0] > 0) {
                 correct++;
                 if(calc_out[0] > 0.85)
                     accurate++;
             }
         }
 
-        if(testData->output[i][0] == 0)
-        {
-            if(calc_out[0] <= 0.5)
-            {
+        if(testData->output[i][0] == 0) {
+            if(calc_out[0] <= 0.5) {
                 correct++;
                 if(calc_out[0] < 0.15)
                     accurate++;
@@ -110,13 +111,13 @@ int main()
     printf("High Accuracy Efficiency = %f\n", accEff);
     printf("Total number of tests: %d\n", total);
     printf("\nLearning rate: %f\n", learning_rate);
-    printf("Network Arch: HL1 - 11 Elliot, HL2 - 11 Elliot, HL3 - 11 Elliot, HL4 - 2 Elliot,  Out - 1 Tanh\n");
+    printf("Network Arch: HL1 - 11 Elliot, HL2 - 11 Elliot, HL3 - 11 Elliot, HL4 - 2 Elliot,  Out - 1 Elliot\n");
     printf("Training Algorithm: RPROP\n");
     printf("Random initial weights\n");
     printf("\nSaving the network\n");
 
     /*save net*/
-    fann_save(net, "fann_donutSwypeDistance_HLIv4_elliotDeepArch_TanhOut_randWeights_2kIt_ivL100_randInterp.net");
+    fann_save(net, "./trainedNets/fann_donutSwypeDistance_HLIv4_elliotDeepArch_ElliotOut_randWeights_2kIt_ivL25_5randInterps.net");
 //    fann_save(net, "Test.net");
     
     fann_print_connections(net);
